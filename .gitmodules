@@ -1,9 +1,0 @@
-[submodule "lib/pyphen"]
-	path = app/lib/pyphen
-	url = https://github.com/the-happy-hippo/pyphen.git
-[submodule "lib/readability"]
-	path = app/lib/readability
-	url = https://github.com/the-happy-hippo/python-readability.git
-[submodule "lib/ebooklib"]
-	path = app/lib/ebooklib
-	url = https://github.com/the-happy-hippo/ebooklib.git
