@@ -1,0 +1,15 @@
+Flask
+Jinja2
+MarkupSafe
+Werkzeug
+chardet
+cssselect
+guess-language
+gunicorn
+itsdangerous
+lxml
+six
+pyphen
+langdetect
+ebooklib
+newspaper3k

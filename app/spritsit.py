@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
-import urllib2
-import StringIO
+import urllib.request, urllib.error, urllib.parse
+import io
 import logging
 
 try:
@@ -61,7 +61,7 @@ class ResponseGenerator:
 
     def add_output(self, output):
         """ Add either a string or string generator."""
-        assert isinstance(output, (basestring, GeneratorType))
+        assert isinstance(output, (str, GeneratorType))
         self._outputs.append(output)
 
     def _get_generator(self):
@@ -78,10 +78,10 @@ class ResponseGenerator:
 
         log.warn('Streaming not allowed, serializing in memory.')
 
-        rawstr = StringIO.StringIO()
+        rawstr = io.StringIO()
 
         for string in gen:
-            if isinstance(string, unicode):
+            if isinstance(string, str):
                 string = string.encode('utf-8')
             rawstr.write(string)
 
@@ -108,7 +108,7 @@ def _validate_token(request):
         utctime = token.replace(READ_API_TOKEN, '', 1)
 
         try:
-            utctime = long(utctime)
+            utctime = int(utctime)
         except ValueError as err:
             _token_error(token, "cannot parse '{}' ({})".format(
                 utctime, err.message))
@@ -142,22 +142,22 @@ def _create_document(url):
     # Read raw html
     try:
         json_object = extractor.extract(url)
-    except urllib2.URLError as err:
+    except urllib.error.URLError as err:
         log.error('urllib2 URL[%s] error: %s', url, err)
         abort(400) # bad request
-    except urllib2.HTTPError as err:
+    except urllib.error.HTTPError as err:
         log.error('urllib2 HTTP error: %s', err)
         abort(error.code)
 
     return json_object
 
 def _get_compression(accept_encodings):
-    encodings = [enc.strip().lower()
-        for enc in accept_encodings.split(',')]
-
-    for enc in encodings:
-        if enc in ['deflate', 'gzip']:
-            return enc
+    # encodings = [enc.strip().lower()
+    #     for enc in accept_encodings.split(',')]
+    #
+    # for enc in encodings:
+    #     if enc in ['deflate', 'gzip']:
+    #         return enc
 
     return None
 
@@ -175,14 +175,13 @@ def _get_json(request):
     jsonp = request.args.get('callback')
 
     if jsonp:
-        log.debug('JSONP is enabled');
+        log.debug('JSONP is enabled')
         response.add_output("%s(" % jsonp)
 
     response.add_output(doc.json_generator())
 
     if jsonp:
         response.add_output(")")
-
     return response.generate()
 
 
@@ -211,11 +210,11 @@ def _urllib_config():
     # Configure urllib2
     debug_level = settings.app_debug
 
-    httph = urllib2.HTTPHandler(debuglevel=debug_level)
-    httpsh = urllib2.HTTPSHandler(debuglevel=debug_level)
-    opener = urllib2.build_opener(httph, httpsh)
+    httph = urllib.request.HTTPHandler(debuglevel=debug_level)
+    httpsh = urllib.request.HTTPSHandler(debuglevel=debug_level)
+    opener = urllib.request.build_opener(httph, httpsh)
 
-    urllib2.install_opener(opener)
+    urllib.request.install_opener(opener)
 
 def _startup():
     log.info('Starting %s' % __file__)

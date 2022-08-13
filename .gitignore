@@ -7,3 +7,4 @@ venv
 tmp
 local_settings.py
 tags
+.idea

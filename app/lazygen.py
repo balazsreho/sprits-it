@@ -5,13 +5,13 @@
 In this module, *string generator* denotes any python generator or iterator
 that yields string objects when calling ``next()``.
 """
-
+import io
 from sys import maxsize
 from json import JSONEncoder
 from zlib import compressobj, decompressobj, MAX_WBITS
 from io import BytesIO, SEEK_SET, SEEK_END
 from gzip import GzipFile
-from StringIO import StringIO
+from io import StringIO
 
 def json_generator(obj, skipkeys=False):
     """Return generator that produces JSON strings for given obj.
@@ -88,7 +88,7 @@ def gzip_generator(string_generator):
 
     """
     # Use gzip and not zlib to make proper gzip header.
-    buffer = StringIO()
+    buffer = io.BytesIO()
     gzip = GzipFile(fileobj=buffer, mode='w')
 
     # Yield header
@@ -100,6 +100,8 @@ def gzip_generator(string_generator):
         gzip.write(string)
         gzip.flush()
 
+        print(string)
+        print(buffer.getvalue())
         yield buffer.getvalue()
         buffer.truncate(0)
 
@@ -130,8 +132,8 @@ def flat_string_generator(iterables, encoding='utf-8'):
 
     """
     for item in iterables:
-        if isinstance(item, basestring):
-            if isinstance(item, unicode):
+        if isinstance(item, str):
+            if isinstance(item, str):
                 item = item.encode(encoding)
             yield item
         else: # it must be an iterable itself

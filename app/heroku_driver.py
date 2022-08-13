@@ -21,12 +21,12 @@ if __name__ == '__main__':
 
     _setup_logging()
 
-    print 'HEROKU: server {} port {} dbg {}'.format(
-        HEROKU, SERVER_PORT, APP_DEBUG)
+    print('HEROKU: server {} port {} dbg {}'.format(
+        HEROKU, SERVER_PORT, APP_DEBUG))
 
     if HEROKU:
-        print 'Production server detected, running gunicorn ...'
+        print('Production server detected, running gunicorn ...')
         from os import system; system('gunicorn spritsit:app')
     else:
-        print 'Development server detected, running Flask test server ...'
+        print('Development server detected, running Flask test server ...')
         import spritsit; spritsit.run(port=SERVER_PORT, debug=APP_DEBUG)

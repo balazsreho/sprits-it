@@ -95,10 +95,10 @@ class Settings(object):
 
         self._settings['goog_analytics_id'] = GOOG_ANALYTICS_ID
 
-        if not READABILITY_API_KEY:
-            raise ValueError(ERROR_UNDEFINED_READABILITY_KEY.strip())
-
-        self._settings['parsers']['Readability']['token'] = READABILITY_API_KEY
+        # if not READABILITY_API_KEY:
+        #     raise ValueError(ERROR_UNDEFINED_READABILITY_KEY.strip())
+        #
+        # self._settings['parsers']['Readability']['token'] = READABILITY_API_KEY
 
         log.info('App settings: %r', self._settings)
 
@@ -121,7 +121,7 @@ class Settings(object):
         fullpath = path.join(path.dirname(__file__), filename)
 
         with open(fullpath) as fileobj:
-            settings = json.load(fileobj, 'utf-8')
+            settings = json.load(fileobj)
 
         return settings
 

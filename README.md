@@ -1,6 +1,17 @@
 sprits-it! — Awesome Speed-Reading
 ==================================
 
+## Python 3.9 version + new article extractor
+
+This version doesn't rely on Readability API. It uses Newspaper3k instead. It's also been updated to Python3.
+Upcoming plans are to clean up the codebase, make compression working and update the frontend.
+
+You can easily deploy this service to Heroku:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+## Sprits-it!
+
 `sprits-it!` is an open source web application which allows speed-reading of arbitrary web pages in a browser.
 
 The speed reading technique is currently based on the ideas of [Spritz](http://www.spritzinc.com/) described in their [blog](http://www.spritzinc.com/blog). At the time of this writing [Spritz](http://www.spritzinc.com/) had virtually nothing to offer to [iOs](http://www.apple.com/ios) device users to play with. This project is targeted specifically on usability in Safari and Chrome mobile browsers but should ultimately work well on other platforms.

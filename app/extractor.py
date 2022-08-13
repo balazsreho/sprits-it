@@ -4,9 +4,12 @@
 """
 import re
 import json
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import logging
+
+import newspaper
+from newspaper import Article
 
 import lazygen
 from settings import settings
@@ -14,11 +17,11 @@ from settings import settings
 import fixpath
 
 from lxml import html, etree
-from readability import readability
+#from readability import readability
 from ebooklib import epub, ITEM_DOCUMENT
 
 import pyphen
-from guess_language import guess_language
+import langdetect
 
 #------------------------------------------------------------------------------
 
@@ -28,9 +31,9 @@ log = logging.getLogger(__name__)
 #------------------------------------------------------------------------------
 
 _regex = {
-    'paragraphs': re.compile(ur'\n\s*\n\s*|\n\s\s+', flags=re.UNICODE),
-    'spaces': re.compile(ur'\s+', flags=re.UNICODE),
-    'longdash': re.compile(ur'\-{2,}', flags=re.UNICODE),
+    'paragraphs': re.compile(r'\n\s*\n\s*|\n\s\s+', flags=re.UNICODE),
+    'spaces': re.compile(r'\s+', flags=re.UNICODE),
+    'longdash': re.compile(r'\-{2,}', flags=re.UNICODE),
 }
 
 XPATH_ALL_NODES = etree.XPath('//*')
@@ -38,7 +41,7 @@ XPATH_ALL_NODES = etree.XPath('//*')
 #------------------------------------------------------------------------------
 
 LANG_FALLBACK = 'en'
-LANG_UNKNOWN  = guess_language.UNKNOWN
+LANG_UNKNOWN  = 'en'
 HYPH_FALLBACK = pyphen.Pyphen(lang=LANG_FALLBACK)
 
 class LangGuess:
@@ -71,7 +74,7 @@ class LangGuess:
             if not words:
                 words = wordcontext
 
-            lang = guess_language.guessLanguage(words)
+            lang = langdetect.detect_langs(words)[0]
 
             log.info('Guessed lang: %s', lang)
 
@@ -142,7 +145,7 @@ class CleanDocument:
 
         doc._error = json_object.get('error', '').lower() == 'true'
 
-        for key, value in json_object.iteritems():
+        for key, value in json_object.items():
             setattr(doc, key, value)
 
         return doc
@@ -150,10 +153,10 @@ class CleanDocument:
     def json_generator(self):
         """Return generator that produces JSON strings.
         """
-        json_object = dict((k, v) for (k, v) in self.__dict__.iteritems()
+        json_object = dict((k, v) for (k, v) in self.__dict__.items()
                 if not k.startswith('_'))
 
-        return lazygen.json_generator(json_object)
+        return json.JSONEncoder().encode(json_object)  # lazygen.json_generator(json_object)
 
     def textify(self):
         """ Transform html content to plain text.
@@ -161,7 +164,7 @@ class CleanDocument:
         if not self.content:
             return
 
-        assert isinstance(self.content, unicode)
+        assert isinstance(self.content, str)
 
         doc = html.fromstring(self.content)
 
@@ -217,7 +220,7 @@ class CleanDocument:
         if len(dash_separated) >= 2:
             for subword in dash_separated:
                 outlist.extend(self._clean_word(subword, wordcontext))
-                outlist.append(u'\u2014') # mdash
+                outlist.append('\u2014') # mdash
             return outlist[:-1]
 
         if len(word) <= settings.max_word_len:
@@ -250,7 +253,7 @@ class Content:
         self._url = url
         self._type = _CONTENT_TYPE_MAP.get(mime_type)
         if not self._type:
-            raise urllib2.HTTPError(url, code=501, # Not Implemented
+            raise urllib.error.HTTPError(url, code=501, # Not Implemented
                     msg='Unsupported mime type: %s' % mime_type,
                     hdrs=None, fp=None)
         self._istream = istream
@@ -306,10 +309,11 @@ class Extractor:
     def __init__(self):
 
         # Params for working with Readability APIs
-        rdd_parser = settings.parsers['Readability']
-
-        self._rdd_api_url = rdd_parser['uri']
-        self._rdd_api_key = rdd_parser['token']
+        # rdd_parser = settings.parsers['Readability']
+        #
+        # self._rdd_api_url = rdd_parser['uri']
+        # self._rdd_api_key = rdd_parser['token']
+        pass
 
     def extract(self, url):
 
@@ -342,23 +346,36 @@ class Extractor:
             log.warn('ePub/pdf CANNOT be parsed with Readability: %s', url)
             return CleanDocument(url, url_type) # empty document fallback
 
-        rdd_args = urllib.urlencode( dict(url=url, token=self._rdd_api_key) )
-        rdd_req  = self._rdd_api_url + '?' + rdd_args
+        # rdd_args = urllib.parse.urlencode( dict(url=url, token=self._rdd_api_key) )
+        # rdd_req  = self._rdd_api_url + '?' + rdd_args
 
-        log.info('Getting Readability content from %s', rdd_req)
+        # log.info('Getting Readability content from %s', rdd_req)
 
         try:
-            content = Extractor._get_raw_content(rdd_req, 'application/json')
+            # content = Extractor._get_raw_content(rdd_req, 'application/json')
+            article = Article(url)
+            article.download()
+            article.parse()
 
-            rdd_doc = CleanDocument.from_json(content.to_json())
+            rdd_doc = CleanDocument(url)
+            rdd_doc.content = article.text  # CleanDocument.from_json(content.to_json())
+            rdd_doc.author = article.authors[0] if len(article.authors) > 0 else ""
+            rdd_doc.type = 'html'
+            rdd_doc.title = article.title
+            rdd_doc.word_count = len(article.text.replace("/n", " ").split(" "))
+            """
+                    doc.title   = content.title or title
+        doc.author  = content.author
+        doc.content = ''.join(clean)
+        doc.word_count = word_count"""
 
-        except urllib2.HTTPError as err:
-            log.error('Readability error for %s: %d', rdd_req, err.code)
+        except urllib.error.HTTPError as err:
+            #log.error('Readability error for %s: %d', rdd_req, err.code)
 
             rdd_doc = CleanDocument(url) # empty document fallback
 
         # convert html to text
-        rdd_doc.textify()
+        # rdd_doc.textify()
 
         return rdd_doc
 
@@ -371,26 +388,26 @@ class Extractor:
 
         if doc.url_type == CONTENT_PDF:
             preproc_url = 'http://get-html.appspot.com/q?'
-            doc.preprocess = preproc_url + urllib.urlencode( {'u':doc.url} )
+            doc.preprocess = preproc_url + urllib.parse.urlencode( {'u':doc.url} )
             return doc
 
         word_count, clean, title = 0, [], None
 
-        for rawhtml in content.generate_html_chunks():
-            if rawhtml:
-
-                rddoc = readability.Document(rawhtml)
-
-                title = title or rddoc.short_title()
-
-                doc.content = rddoc.summary()
-
-                # convert html to text
-                doc.textify()
-
-                clean.append(doc.content)
-
-                word_count += doc.word_count
+        # for rawhtml in content.generate_html_chunks():
+        #     if rawhtml:
+        #         rddoc = Article
+        #         # rddoc = readability.Document(rawhtml)
+        #
+        #         title = title or rddoc.short_title()
+        #
+        #         doc.content = rddoc.summary()
+        #
+        #         # convert html to text
+        #         doc.textify()
+        #
+        #         clean.append(doc.content)
+        #
+        #         word_count += doc.word_count
 
         doc.title   = content.title or title
         doc.author  = content.author
@@ -404,7 +421,7 @@ class Extractor:
         Return file-like object so it can be fed to json.load()
         """
 
-        req = urllib2.Request(url)
+        req = urllib.request.Request(url)
 
         if mime:
             req.add_header('Accept', mime)
@@ -412,7 +429,7 @@ class Extractor:
         if allowgzip:
             req.add_header('Accept-Encoding', 'gzip,deflate')
 
-        resp = urllib2.urlopen(req)
+        resp = urllib.request.urlopen(req)
 
         meta = resp.info()
 
