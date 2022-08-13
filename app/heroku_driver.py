@@ -1,13 +1,13 @@
 # coding: utf8
 # Main app driver
-
+import os
 import sys
 import logging
 
 from os import environ as ENV
 
-HEROKU      = int(ENV.get('DYNO', '0')) # running on the server
-SERVER_PORT = int(ENV['PORT']) # listening port (mandatory)
+HEROKU      = True if 'DYNO' in os.environ else False  # running on the server
+SERVER_PORT = int(ENV['PORT'])  # listening port (mandatory)
 APP_DEBUG   = int(ENV.get('APP_DEBUG', '0'))
 
 def _setup_logging():
