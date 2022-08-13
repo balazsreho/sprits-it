@@ -26,7 +26,8 @@ if __name__ == '__main__':
 
     if HEROKU:
         print('Production server detected, running gunicorn ...')
-        from os import system; system('gunicorn spritsit:app')
+        from os import system
+        system('cd app && gunicorn spritsit:app')
     else:
         print('Development server detected, running Flask test server ...')
         import spritsit; spritsit.run(port=SERVER_PORT, debug=APP_DEBUG)
