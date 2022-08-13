@@ -6,7 +6,7 @@ import logging
 
 from os import environ as ENV
 
-HEROKU      = int(ENV.get('HEROKU', '0')) # running on the server
+HEROKU      = int(ENV.get('DYNO', '0')) # running on the server
 SERVER_PORT = int(ENV['PORT']) # listening port (mandatory)
 APP_DEBUG   = int(ENV.get('APP_DEBUG', '0'))
 
