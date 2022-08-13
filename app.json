@@ -1,0 +1,7 @@
+{
+  "name": "Spritz-it",
+  "description": "Open source webapp to read text faster",
+  "image": "heroku/python",
+  "repository": "https://github.com/balazsreho/sprits-it",
+  "keywords": ["python", "flask" ]
+}
