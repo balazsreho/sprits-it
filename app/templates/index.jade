@@ -30,7 +30,7 @@ html(lang="en")
     link(href="#{locals.assets}img/favicon.ico" rel="shortcut icon" )
 
     // Reading font
-    link(href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet prefetch')
+    link(href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet prefetch')
 
   body
 
@@ -111,8 +111,8 @@ html(lang="en")
     -// Just for fun -- security by obscurity :)
     - var parsers = filter(locals.parsers, 'Readability')
     script!= "var parsers='" + escapify(JSON.stringify(parsers)) + "';"
-    script(src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js')
-    script(src='http://talkgadget.google.com/talkgadget/channel.js')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js')
+    script(src='https://talkgadget.google.com/talkgadget/channel.js')
 
     if (locals.jsmin)
       script(src='#{locals.assets}js/min/utils.min.js')
